@@ -17,7 +17,7 @@
 
 # pjax适配
 
-自1.0.6之后重新调整对于pjax的适配方案，如果主题有pjax回调可以直接填下以下代码，如果没有那么推荐你使用[Cuckoo](https://github.com/bhaoo/cuckoo)主题
+自1.0.9之后重新调整对于pjax的适配方案，如果主题有pjax回调，请在回调函数中填写以下代码
 
 ```js
 document.addEventListener("click", (event) => {
