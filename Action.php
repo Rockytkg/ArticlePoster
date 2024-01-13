@@ -97,7 +97,7 @@ class ArticlePoster_Action extends Typecho_Widget implements Widget_Interface_Do
             return $postText;
         } else {
             $field = $this->db->fetchRow($this->db->select('str_value')->from('table.fields')->where('cid = ? AND name = ?', $cid, $articlePosterContent)->limit(1));
-            return mb_substr(!empty($field['str_value']) ? $field['str_value'] : $postText, 0, 200);
+            return mb_substr(!empty($field['str_value']) ? $field['str_value'] : $postText, 0, 200) . '...';
         }
     }
 
