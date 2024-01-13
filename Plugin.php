@@ -88,7 +88,7 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
         $button = new Typecho_Widget_Helper_Form_Element_Textarea(
             'button',
             null,
-            '<div class="agree"style="margin-left:40px"><div class="article-poster-button xc-poster-button"><i class="iconfont iconhaibaofenxiang article-poster-button"></i></div><span class="post_ds">海报</span></div>',
+            '<div class="agree"style="margin-left:40px"><button class="article-poster-button xc-poster-button"><i class="iconfont iconhaibaofenxiang"></i></button><span class="post_ds">海报</span></div>',
             _t('自定义按钮样式'),
             _t('根据自己模板的按钮样式来自定义分享按钮的样式，在class里面加入<b style="color: #ff0000;">article-poster-button</b>即可使用')
         );
