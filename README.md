@@ -20,18 +20,24 @@
 自1.0.6之后重新调整对于pjax的适配方案，如果主题有pjax回调可以直接填下以下代码，如果没有那么推荐你使用[Cuckoo](https://github.com/bhaoo/cuckoo)主题
 
 ```js
-$('.article-poster-button').on('click',function(){
-	create_poster();
-});
-$('[data-event=\'poster-close\']').on('click', function(){
-	$('.article-poster, .poster-popover-mask, .poster-popover-box').fadeOut()
-});
-$('[data-event=\'poster-download\']').on('click', function(){
-	download_poster();
+document.addEventListener("click", (event) => {
+  if (event.target.matches(".article-poster-button")) {
+    createPoster();
+  } else if (event.target.matches('[data-event="poster-close"]')) {
+    document.querySelectorAll(".article-poster, .poster-popover-mask, .poster-popover-box").forEach(elem => elem.style.display = 'none');
+  } else if (event.target.matches('[data-event="poster-download"]')) {
+    downloadPoster();
+  }
 });
 ```
 
 # 更新日志
+
+2023-1-13更新说明
+
+* 重构部分代码，去除无用代码
+* 采用原生JS去除JQ依赖
+* 重写摘要逻辑，支持自定义摘要字段（有些主题采用新增字段来自定义摘要）
 
 2024-01-12更新说明:
 
