@@ -6,11 +6,10 @@ const createPoster = async () => {
   const id = articlePoster ? articlePoster.getAttribute("data-id") : null;
 
   if (!id) {
-    Qmsg.error("文章ID获取失败，请联系管理员");
+    alert("文章ID获取失败，请联系管理员");
     return false;
   }
 
-  const loadingMsg = Qmsg.loading("正在生成海报，请稍后...");
   const articlePosterButton = document.querySelector(".article-poster-button");
   articlePosterButton.innerHTML = waitIcon;
   articlePosterButton.setAttribute("disabled", true);
@@ -23,7 +22,6 @@ const createPoster = async () => {
     const json = await response.json();
 
     if (json.code === 200) {
-      Qmsg.success("生成成功");
       document.querySelector(".article-poster-images").setAttribute("src", json.data);
       document.querySelector(".poster-download").setAttribute("data-url", json.data);
       document.querySelectorAll(".article-poster, .poster-popover-mask, .poster-popover-box").forEach(elem => elem.style.display = 'block');
@@ -33,7 +31,7 @@ const createPoster = async () => {
       throw new Error(json.data ? json.data : "生成失败，请重试");
     }
   } catch (error) {
-    Qmsg.error(error.message);
+    alert(error.message);
     articlePosterButton.innerHTML = errorIcon;
     articlePosterButton.removeAttribute("disabled");
   } finally {
