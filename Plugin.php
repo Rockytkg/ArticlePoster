@@ -9,7 +9,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) {
  * @package ArticlePoster
  * @author MoLeft
  * @author 浅梦
- * @version 1.0.8
+ * @version 1.0.9
  * @link https://letanml.xyz/
  */
 class ArticlePoster_Plugin implements Typecho_Plugin_Interface
@@ -40,19 +40,6 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
     public static function config(Typecho_Widget_Helper_Form $form)
     {
         $options = Helper::options();
-        $service_list = array(
-            $options->pluginUrl . '/ArticlePoster/service/api.php' => _t('本地节点(速度最快，需服务器支持GD库)')
-        );
-
-        $service = new Typecho_Widget_Helper_Form_Element_Select(
-            'service',
-            $service_list,
-            $options->pluginUrl . '/ArticlePoster/service/api.php',
-            _t('服务器节点'),
-            _t('本地节点提供最快的服务速度，确保您的服务器支持GD库')
-        );
-        $form->addInput($service);
-
         $sitename = new Typecho_Widget_Helper_Form_Element_Text(
             'sitename',
             null,
@@ -89,30 +76,23 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
         );
         $form->addInput($qq);
 
+        $content = new Typecho_Widget_Helper_Form_Element_Text(
+            'content',
+            null,
+            '',
+            _t('自定义摘要字段'),
+            _t('请填写自定义摘要字段，留空则使用文章摘要）')
+        );
+        $form->addInput($content);
+
         $button = new Typecho_Widget_Helper_Form_Element_Textarea(
             'button',
             null,
-            '<button class="article-poster-button mdui-btn mdui-btn-raised mdui-btn-dense mdui-color-theme-accent mdui-ripple"><i class="mdui-icon mdui-icon-left material-icons">file_download</i>下载海报</button>',
+            '<div class="agree"style="margin-left:40px"><div class="article-poster-button xc-poster-button"><i class="iconfont iconhaibaofenxiang article-poster-button"></i></div><span class="post_ds">海报</span></div>',
             _t('自定义按钮样式'),
             _t('根据自己模板的按钮样式来自定义分享按钮的样式，在class里面加入<b style="color: #ff0000;">article-poster-button</b>即可使用')
         );
         $form->addInput($button);
-
-        $qq_setting = new Typecho_Widget_Helper_Form_Element_Radio(
-            'qq_setting',
-            array('close' => _t('无操作'), 'type1' => _t('防举报'), 'type2' => _t('全屏防举报')),
-            'close',
-            _t('在QQ里的操作')
-        );
-        $form->addInput($qq_setting);
-
-        $jquery = new Typecho_Widget_Helper_Form_Element_Radio(
-            'jquery',
-            array('true' => _t('是'), 'false' => _t('否')),
-            'true',
-            _t('是否加载jquery')
-        );
-        $form->addInput($jquery);
     }
 
     /**
@@ -144,15 +124,11 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
     {
         $options = Helper::options();
         echo '<link rel="stylesheet" href="' . $options->pluginUrl . '/ArticlePoster/css/core.css">';
-        echo '<link rel="stylesheet" href="' . $options->pluginUrl . '/ArticlePoster/css/iconfont.css">';
     }
 
     public static function footer()
     {
         $options = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster');
-        if ($options->jquery == 'true') {
-            echo '<script src="' . Helper::options()->pluginUrl . '/ArticlePoster/js/jquery.min.js"></script>';
-        }
         echo '<script src="' . Helper::options()->pluginUrl . '/ArticlePoster/js/core.js"></script>';
     }
 }

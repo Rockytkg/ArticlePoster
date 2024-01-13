@@ -1,70 +1,61 @@
-$(".article-poster-button").on("click",function(){
-	create_poster();
-});
-$('[data-event="poster-close"]').on('click', function(){
-	$('.article-poster, .poster-popover-mask, .poster-popover-box').fadeOut()
-});
-$('[data-event="poster-download"]').on('click', function(){
-	download_poster();
-});
-function create_poster(){
-	//下载图标
-	var download_icon = '<i class="iconfont icontaiji"> </i>';
-	//错误图标
-	var error_icon = '<i class="iconfont iconanonymous-full"> </i>';
-	//等待图标
-	var wait_icon = '<i class="iconfont icondengdai"> </i>';
-	var id = $(".article-poster").data("id");
-	if(!id){
-    	alert("请刷新页面");
-    	return false;
-	}
-	var moleft = $.ajax({
-        type: "get",
-        url: "/index.php/ArticlePoster/make",
-        data: {cid:id},
-        timeout: 60000,
-        dataType: "json",
-        beforeSend: function (moleft) {
-           $(".article-poster-button").html(wait_icon);
-		   $(".article-poster-button").attr("disabled",true);
-        },
-        success: function(json) {
-        	if(json.status == 200){
-                $('.article-poster-images').attr("src", json.data);
-                $(".poster-download").data("url", json.data);
-                $('.article-poster, .poster-popover-mask, .poster-popover-box').fadeIn()
-            	$(".article-poster-button").html(download_icon);
-	    		$(".article-poster-button").attr("disabled",false);
-        	}else{
-        		if(json.data){
-        			alert(json.data);
-        		}else{
-        			alert("网络超时，请重试");
-        		}
-            	$(".article-poster-button").html(error_icon);
-	    		$(".article-poster-button").attr("disabled",false);
-        	}
-        },
-        error: function (textStatus) {
-        	alert("生成失败，请重试");
-            $(".article-poster-button").html(error_icon);
-	    	$(".article-poster-button").attr("disabled",false);
-        },
-        complete: function (XMLHttpRequest,status) {
-            if(status == 'timeout') {
-            	moleft.abort();
-                $(".article-poster-button").html(error_icon);
-	    		$(".article-poster-button").attr("disabled",false);
-            }
-        }
+const createPoster = async () => {
+  const downloadIcon = '<i class="iconfont icontaiji"> </i>';
+  const errorIcon = '<i class="iconfont iconanonymous-full"> </i>';
+  const waitIcon = '<i class="iconfont icondengdai"> </i>';
+  const articlePoster = document.querySelector(".article-poster");
+  const id = articlePoster ? articlePoster.getAttribute("data-id") : null;
+
+  if (!id) {
+    Qmsg.error("文章ID获取失败，请联系管理员");
+    return false;
+  }
+
+  const loadingMsg = Qmsg.loading("正在生成海报，请稍后...");
+  const articlePosterButton = document.querySelector(".article-poster-button");
+  articlePosterButton.innerHTML = waitIcon;
+  articlePosterButton.setAttribute("disabled", true);
+
+  try {
+    const response = await fetch(`/index.php/ArticlePoster/make?cid=${id}`, {
+      method: "GET",
+      timeout: 60000,
     });
-}
-function download_poster(){
-	var $a = document.createElement('a');
-	$a.setAttribute("href", $(".poster-download").data("url"));
-	$a.setAttribute("download", "");
-	var evObj = document.createEvent('MouseEvents');
-	evObj.initMouseEvent( 'click', true, true, window, 0, 0, 0, 0, 0, false, false, true, false, 0, null);
-	$a.dispatchEvent(evObj);
-}
+    const json = await response.json();
+
+    if (json.code === 200) {
+      Qmsg.success("生成成功");
+      document.querySelector(".article-poster-images").setAttribute("src", json.data);
+      document.querySelector(".poster-download").setAttribute("data-url", json.data);
+      document.querySelectorAll(".article-poster, .poster-popover-mask, .poster-popover-box").forEach(elem => elem.style.display = 'block');
+      articlePosterButton.innerHTML = downloadIcon;
+      articlePosterButton.removeAttribute("disabled");
+    } else {
+      throw new Error(json.data ? json.data : "生成失败，请重试");
+    }
+  } catch (error) {
+    Qmsg.error(error.message);
+    articlePosterButton.innerHTML = errorIcon;
+    articlePosterButton.removeAttribute("disabled");
+  } finally {
+    loadingMsg.close();
+  }
+};
+
+const downloadPoster = () => {
+  const a = document.createElement("a");
+  a.href = document.querySelector(".poster-download").getAttribute("data-url");
+  a.download = "海报";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
+
+document.addEventListener("click", (event) => {
+  if (event.target.matches(".article-poster-button")) {
+    createPoster();
+  } else if (event.target.matches('[data-event="poster-close"]')) {
+    document.querySelectorAll(".article-poster, .poster-popover-mask, .poster-popover-box").forEach(elem => elem.style.display = 'none');
+  } else if (event.target.matches('[data-event="poster-download"]')) {
+    downloadPoster();
+  }
+});

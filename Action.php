@@ -1,175 +1,149 @@
 <?php
+
+include __DIR__ . '/service/api.php';
+/**
+ * 文章海报生成
+ */
 class ArticlePoster_Action extends Typecho_Widget implements Widget_Interface_Do
 {
-
     private $db;
     private $info;
 
     public function __construct($request, $response, $params = NULL)
     {
-        $this->info['sitename'] = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster')->sitename;
-        $this->info['introduction'] = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster')->introduction;
-        $this->info['author'] = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster')->author;
-        $this->info['qq'] = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster')->qq;
-        $this->db  = Typecho_Db::get();
-        parent::__construct($request, $response, $params);
-        if (method_exists($this, $this->request->type)) {
-            call_user_func(array(
-                $this,
-                $this->request->type
-            ));
-        } else {
-            $this->defaults();
+        $pluginOptions = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster');
+        $infoKeys = ['sitename', 'introduction', 'author', 'qq'];
+        foreach ($infoKeys as $key) {
+            $this->info[$key] = $pluginOptions->{$key};
         }
+
+        $this->db = Typecho_Db::get();
     }
 
+    /**
+     * 生成海报
+     */
     public function make()
     {
+
         if (empty($_GET['cid'])) {
-            $this->export("请填写cid", -100);
+            $this->export('缺少参数', 400);
+        } elseif (!is_numeric($_GET['cid']) || $_GET['cid'] < 1) {
+            $this->export('参数错误', 400);
         }
-        $cid = self::GET('cid');
-        $array = $this->get_artcle($cid);
-        if (!$array) {
-            $this->export("获取文章失败", -100);
+
+        $cid = $_GET['cid'];
+
+        // 检查是否存在海报
+        $imgPath = __DIR__ . '/poster/cid-' . $cid . '.png';
+        if (file_exists($imgPath)) {
+            $imgData = file_get_contents($imgPath);
+            $base64 = 'data:image/png;base64,' . base64_encode($imgData);
+            $this->export('生成成功', 200, $base64);
         }
-        $folder = dirname(__FILE__) . '/poster/';
-        is_dir($folder) or mkdir($folder, 0777, true);
-        if (file_exists($folder . 'cid-' . $cid . '.png')) {
-            $this->export(Helper::options()->pluginUrl . '/ArticlePoster/poster/cid-' . $cid . '.png');
-        }
-        $this->info['title'] = $array['title'];
-        $this->info['content'] = $array['content'];
-        $this->info['time'] = $array['time'];
-        $qq_setting = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster')->qq_setting;
-        $this->info['link'] = urlencode($array['link']);
-        foreach ($this->info as $v) {
-            if (empty($v) || count($this->info) != 8) {
-                $this->export("请联系网站管理员配置相关信息！", -100);
-            }
-        }
-        $plugins_info = $this->get_plugins_info();
-        if ($plugins_info) {
-            $timestamp = md5($plugins_info['author'] . $plugins_info['package']);
+
+        $post = $this->getPostInfo($cid);
+        $post['sitename'] = $this->info['sitename'];
+        $post['introduction'] = $this->info['introduction'];
+        $post['author'] = $this->info['author'];
+        $post['qq'] = $this->info['qq'];
+
+        $img = generatePoster($post);
+
+        if ($img['code'] !== 200) {
+            $this->export('生成失败', 500);
         } else {
-            $timestamp = md5(date("Y-m-d H:i:s"));
+            $imgUrl = $this->saveImage($img['img'], $cid);
+            $this->export('生成成功', 200, $imgUrl);
         }
-        $token = 0 + mt_rand() / mt_getrandmax() * (1 - 0);
-        $api = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster')->service;
-        $result = $this->get_curl($api . "?t=" . $token, "sitename=" . $this->info['sitename'] . "&introduction=" . $this->info['introduction'] . "&link=" . $this->info['link'] . "&title=" . $this->info['title'] . "&content=" . strip_tags($this->info['content']) . "&time=" . $this->info['time'] . "&author=" . $this->info['author'] . "&qq=" . $this->info['qq'] . "&type=" . $qq_setting . "&timestamp={$timestamp}");
-        //file_put_contents(dirname(__FILE__).'/run.log',$result);
-        if (empty($result)) {
-            $this->export('当前节点不可用，请联系站长更换节点！', -100);
-        }
-        $res = json_decode($result, true);
-        if ($res['code'] != 1) {
-            $this->export($res['msg'], -100);
-        }
-        $a = file_put_contents($folder . 'cid-' . $cid . '.png', base64_decode($res['img']));
-        if ($a) {
-            $this->export(Helper::options()->pluginUrl . '/ArticlePoster/poster/cid-' . $cid . '.png');
+    }
+
+    /**
+     * 获取文章信息
+     * @param int $cid 文章cid
+     * @return array 文章信息数组
+     */
+    private function getPostInfo($cid)
+    {
+        $post = Typecho_Widget::widget('Widget_Abstract_Contents')->filter($this->db->fetchRow($this->db->select()->from('table.contents')->where('table.contents.cid = ?', $cid)));
+        if (!$post) return false;
+
+        $archive = Typecho_Widget::widget('Widget_Archive', 'pageSize=1&type=post', 'cid=' . $cid);
+        $archive->to($permalink);
+
+        $excerpt = Typecho_Common::subStr(preg_replace('/\s+/', ' ', strip_tags($archive->isMarkdown ? $archive->markdown($post['text']) : $archive->autoP($post['text']))), 0, 200, "...");
+        $content = $this->getPostSummary($excerpt, $cid);
+
+        return array(
+            'title' => $post['title'],
+            'content' => $content,
+            'time' => date("Y-m-d H:i:s", $post['created']),
+            'link' => $permalink->permalink,
+            'readingTime' => round(mb_strlen(strip_tags($post['text']), 'UTF-8') / 450, 1)
+        );
+    }
+
+    /**
+     * 获取文章摘要
+     * @param string $postText 文章默认摘要内容
+     * @param int $cid 文章cid
+     * @return string 文章摘要
+     */
+    private function getPostSummary($postText, $cid)
+    {
+        $articlePosterContent = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster')->content;
+
+        if (empty($articlePosterContent)) {
+            return $postText;
         } else {
-            $this->export("海报保存失败!", -100);
+            $field = $this->db->fetchRow($this->db->select('str_value')->from('table.fields')->where('cid = ? AND name = ?', $cid, $articlePosterContent)->limit(1));
+            return !empty($field['str_value']) ? $field['str_value'] : $postText;
         }
     }
 
-    public function get_plugins_info()
+    /**
+     * 保存图片
+     * @param string $imgData base64编码的图片
+     * @param int $cid 文章cid
+     * @return string base64图片地址
+     */
+    function saveImage($imgData, $cid)
     {
-        Typecho_Widget::widget('Widget_Plugins_List@activated', 'activated=1')->to($activatedPlugins);
-        $activatedPlugins = json_decode(json_encode($activatedPlugins), true);
-
-        // 确保 $plugins_list 是一个数组
-        $plugins_list = is_array($activatedPlugins['stack']) ? $activatedPlugins['stack'] : [];
-        $plugins_info = array();
-
-        foreach ($plugins_list as $plugin) {
-            if (isset($plugin['title']) && $plugin['title'] == 'ArticlePoster') {
-                $plugins_info = $plugin;
-                break;
-            }
+        $imgData = base64_decode($imgData);
+        $imgName = 'cid-' . $cid . '.png';
+        $imgPath = __DIR__ . '/poster/' . $imgName;
+        // 检查文件夹是否存在
+        if (!is_dir(__DIR__ . '/poster')) {
+            mkdir(__DIR__ . '/poster');
         }
-
-        // 使用 !empty 来检查 $plugins_info 是否非空
-        return !empty($plugins_info) ? $plugins_info : false;
+        file_put_contents($imgPath, $imgData);
+        return "data:image/png;base64," . $imgName;
     }
 
-    public function get_artcle($cid)
-    {
-        $options = Typecho_Widget::widget('Widget_Options');
-        $select = $this->db->select('cid', 'title', 'created', 'text', 'type')->from('table.contents')->where('status = ?', 'publish')->where('created < ?', time())->where('cid = ?', $cid);
-        $posts  = $this->db->fetchAll($select);
-        if (!$posts) {
-            return false;
-        }
-        $posts[0]['created'] = date("Y-m-d H:i:s", $posts[0]['created']);
-        $posts[0]['title'] = $posts[0]['title'];
-        $posts[0]['text'] = $posts[0]['text'];
-        Typecho_Widget::widget('Widget_Archive', 'pageSize=1&type=post', 'cid=' . $cid)->to($link);
-        return array('title' => $posts[0]['title'], 'content' => $posts[0]['text'], 'time' => $posts[0]['created'], 'link' => $link->permalink);
-    }
-
-    public function export($data = array(), $status = 200)
+    /**
+     * 返回信息
+     * @param int $status 状态码
+     * @param string $msg 信息
+     * @param string $data 数据
+     */
+    public function export($msg, $status = 200, $data = null)
     {
         http_response_code($status);
         header('Content-Type: application/json');
-        $json = json_encode(
-            array(
-                'status' => $status,
-                'data' => $data
-            ),
-            JSON_UNESCAPED_UNICODE
+        $response = array(
+            'code' => $status,
+            'msg' => $msg
         );
+        if ($data !== null) {
+            $response['data'] = $data;
+        }
+        $json = json_encode($response, JSON_UNESCAPED_UNICODE);
         echo $json;
         exit;
-    }
-
-    private static function GET($key, $default = '')
-    {
-        return isset($_GET[$key]) ? $_GET[$key] : $default;
     }
 
     public function action()
     {
         $this->on($this->request);
-    }
-
-    function get_curl($url, $post = 0, $referer = 0, $cookie = 0, $header = 0, $ua = 0, $nobody = 0)
-    {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        $httpheader[] = "Accept:*/*";
-        $httpheader[] = "Accept-Encoding:gzip,deflate,sdch";
-        $httpheader[] = "Accept-Language:zh-CN,zh;q=0.8";
-        $httpheader[] = "Connection:close";
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $httpheader);
-        if ($post) {
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
-        }
-        if ($header) {
-            curl_setopt($ch, CURLOPT_HEADER, true);
-        }
-        if ($cookie) {
-            curl_setopt($ch, CURLOPT_COOKIE, $cookie);
-        }
-        if ($referer) {
-            curl_setopt($ch, CURLOPT_REFERER, $referer);
-        }
-        if ($ua) {
-            curl_setopt($ch, CURLOPT_USERAGENT, $ua);
-        } else {
-            curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Linux; U; Android 4.0.4; es-mx; HTC_One_X Build/IMM76D) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0");
-        }
-        if ($nobody) {
-            curl_setopt($ch, CURLOPT_NOBODY, 1);
-        }
-        curl_setopt($ch, CURLOPT_ENCODING, "gzip");
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $ret = curl_exec($ch);
-        curl_close($ch);
-        return $ret;
     }
 }
