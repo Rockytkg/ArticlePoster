@@ -33,7 +33,7 @@ document.addEventListener("click", (event) => {
 
 # 更新日志
 
-2023-1-13更新说明
+2024-1-13更新说明
 
 * 重构部分代码，去除无用代码
 * 采用原生JS去除JQ依赖
