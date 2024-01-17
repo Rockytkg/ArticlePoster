@@ -35,7 +35,7 @@ const createPoster = async () => {
     articlePosterButton.innerHTML = errorIcon;
     articlePosterButton.removeAttribute("disabled");
   } finally {
-    loadingMsg.close();
+    console.log("finally");
   }
 };
 
