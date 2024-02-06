@@ -6,6 +6,7 @@
 
 1.将插件上传到 /usr/plugins/，并重命名为ArticlePoster
 2.修改post.php，在合适的位置加入挂载点
+3.修改js/core.js内容，自定义按钮过渡样式
 
 ```php
 <?php ArticlePoster_Plugin::button($this->cid); ?>
@@ -17,21 +18,19 @@
 
 # pjax适配
 
-自1.0.9之后重新调整对于pjax的适配方案，如果主题有pjax回调，请在回调函数中填写以下代码
+自1.1.0之后重新调整对于pjax的适配方案，如果主题有pjax回调，请在回调函数中填写以下代码
 
 ```js
-document.addEventListener("click", (event) => {
-  if (event.target.matches(".article-poster-button")) {
-    createPoster();
-  } else if (event.target.matches('[data-event="poster-close"]')) {
-    document.querySelectorAll(".article-poster, .poster-popover-mask, .poster-popover-box").forEach(elem => elem.style.display = 'none');
-  } else if (event.target.matches('[data-event="poster-download"]')) {
-    downloadPoster();
-  }
-});
+initArticlePoster();
 ```
 
 # 更新日志
+
+2024-2-6更新说明
+
+* 重写Js部分，现在支持轻松修改弹窗函数了
+* 使用jpg格式，大幅度压缩海报大小
+* 添加更多自定义设置项
 
 2024-1-13更新说明
 

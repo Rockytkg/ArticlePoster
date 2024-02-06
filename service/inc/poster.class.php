@@ -1,6 +1,7 @@
 <?php
 
-class poster {
+class poster
+{
 
     public static $errMsg = '';
     public static $config = array();
@@ -14,25 +15,26 @@ class poster {
      * @return array 合并后的完整配置信息
      */
 
-    public static function setConfig($config = array()) {
+    public static function setConfig($config = array())
+    {
         self::$backGroundImage = isset($config['bg_url']) ? $config['bg_url'] : '';
         self::$fontPath = dirname(__FILE__) . '/fonts/';
         $imageDefault = array(
             'url' => '', //图片路径
             'stream' => 0, //图片数据流，与url二选一
-            'left' => 0,//左边距
-            'top' => 0,//上边距
-            'right' => 0,//有边距
-            'bottom' => 0,//下边距
-            'width' => 0,//宽
-            'height' => 0,//高
+            'left' => 0, //左边距
+            'top' => 0, //上边距
+            'right' => 0, //有边距
+            'bottom' => 0, //下边距
+            'width' => 0, //宽
+            'height' => 0, //高
             'radius' => 0, //圆角度数，最大值为显示宽度的一半
-            'opacity' => 100//透明度
+            'opacity' => 100 //透明度
         );
         $textDefault = array(
-            'text' => '',//显示文本
-            'left' => 0,//左边距
-            'top' => 0,//上边距
+            'text' => '', //显示文本
+            'left' => 0, //左边距
+            'top' => 0, //上边距
             'width' => 0, //文本框宽度，设置后可实现文字换行
             'fontSize' => 32, //字号
             'fontPath' => 'msyh.ttf', //字体文件
@@ -63,7 +65,8 @@ class poster {
      * @return string or bool 图片数据流或者处理结果状态
      */
 
-    public static function make($fileName = '') {
+    public static function make($fileName = '')
+    {
         self::$errMsg = null;
         if (!self::$backGroundImage || !is_file(self::$backGroundImage)) {
             self::$errMsg = '请先设置有效的海报背景图片';
@@ -93,7 +96,7 @@ class poster {
         //处理图片
         if (self::$config['image']) {
             foreach (self::$config['image'] as $key => $val) {
-                if ($val['stream']) {//如果传的是字符串图像流
+                if ($val['stream']) { //如果传的是字符串图像流
                     $info = getimagesizefromstring($val['stream']);
                     $res = imagecreatefromstring($val['stream']);
                 } else {
@@ -181,7 +184,8 @@ class poster {
      * @return bool 清理结果
      */
 
-    public static function clear() {
+    public static function clear()
+    {
         if (self::$bgImageData) {
             self::$bgImageData = null;
         }
@@ -193,12 +197,14 @@ class poster {
      * @return string 异常信息说明
      */
 
-    public static function getErrMessage() {
+    public static function getErrMessage()
+    {
         return self::$errMsg;
     }
 
     //生成圆角图片
-    private static function setRadiusImage(&$imgData, $resWidth, $resHeight, $w, $h, $radius = 10) {
+    private static function setRadiusImage(&$imgData, $resWidth, $resHeight, $w, $h, $radius = 10)
+    {
         $img = imagecreatetruecolor($w, $h);
         //创建透明背景色，主要127参数，其他可以0-255，因为任何颜色的透明都是透明
         $transparent = imagecolorallocatealpha($img, 0, 0, 0, 127);
@@ -249,7 +255,8 @@ class poster {
     }
 
     //文字自动换行
-    private static function stringAutoWrap($string, $fontsize, $angle, $fontface, $width) {
+    private static function stringAutoWrap($string, $fontsize, $angle, $fontface, $width)
+    {
         $content = '';
         $arr = array();
         preg_match_all("/./u", $string, $arr);
@@ -264,5 +271,4 @@ class poster {
         }
         return $content;
     }
-
 }

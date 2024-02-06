@@ -47,6 +47,35 @@ function get_curl($url, $post = 0, $referer = 0, $cookie = 0, $header = 0, $ua =
     return $ret;
 }
 
+function convertPngToJpgAndCompress($pngData)
+{
+    if (!$pngData) {
+        return $pngData;
+    }
+    // 从原始PNG数据创建图像资源
+    $image = imagecreatefromstring($pngData);
+    if (!$image) {
+        throw new Exception('无法创建图像资源');
+    }
+
+    // 设置JPG压缩质量，范围是 0（最差质量，文件最小）到 100（最佳质量，文件最大）
+    // 通常，75 到 90 是一个较好的平衡点
+    $compressionQuality = 75;
+
+    // 使用输出缓冲捕获JPEG图像数据
+    ob_start();
+    imagejpeg($image, NULL, $compressionQuality);
+    $jpgData = ob_get_contents();
+    ob_end_clean();
+
+    // 释放图像资源
+    imagedestroy($image);
+
+    // 返回JPEG二进制数据
+    return $jpgData;
+}
+
+
 /**
  * 生成海报
  * @param array $postData 文章信息数组
@@ -57,14 +86,20 @@ function generatePoster($postData)
     // 从 postData 中提取信息
     $info = array(
         'sitename' => $postData['sitename'], // 站点名称
+        'sitenamesize' => intval($postData['siteNameSize']), // 站点名称字体大小
         'siteintr' => $postData['introduction'], // 站点简介
+        'siteintrsize' => intval($postData['introductionSize']), // 站点简介字体大小
         'artclename' => $postData['title'], // 文章标题
+        'artclenamesize' => intval($postData['titleSize']), // 文章标题字体大小
         'artclecont' => $postData['content'], // 文章摘要
+        'artclecontsize' => intval($postData['contentSize']), // 文章摘要字体大小
         'artcletime' => $postData['time'], // 文章发布时间
         'artcleauth' => $postData['author'], // 文章作者
+        'artcleauthsize' => intval($postData['authorSize']), // 文章作者字体大小
         'artcleqq' => $postData['qq'], // 文章作者QQ
         "qrCodeData" => QRcode::pngData($postData['link'], 13), // 文章链接
         "read_time" => $postData['readingTime'], // 预计阅读时间
+        "headimage" => $postData['headimage'], // 文章头图
     );
 
     // 根据 $info 配置生成海报
@@ -103,7 +138,7 @@ function generatePoster($postData)
                 'left' => 50,
                 'top' => 650,
                 'width' => 650,
-                'fontSize' => 30,
+                'fontSize' => $info['artclenamesize'],
                 'fontColor' => '0,0,0',
                 'angle' => 0,
             ),
@@ -112,7 +147,7 @@ function generatePoster($postData)
                 'left' => 50,
                 'top' => 700,
                 'width' => 650,
-                'fontSize' => 15,
+                'fontSize' => $info['artclecontsize'],
                 'fontColor' => '85,85,85',
                 'angle' => 0,
             ),
@@ -121,7 +156,7 @@ function generatePoster($postData)
                 'left' => 170,
                 'top' => 940,
                 'width' => 650,
-                'fontSize' => 17,
+                'fontSize' => $info['artcleauthsize'],
                 'fontColor' => '0,0,0',
                 'angle' => 0,
             ),
@@ -148,7 +183,7 @@ function generatePoster($postData)
                 'left' => 100,
                 'top' => 1170,
                 'width' => 325,
-                'fontSize' => 30,
+                'fontSize' => $info['sitenamesize'],
                 'fontColor' => '0,0,0',
                 'angle' => 0,
             ),
@@ -157,7 +192,7 @@ function generatePoster($postData)
                 'left' => 100,
                 'top' => 1210,
                 'width' => 325,
-                'fontSize' => 15,
+                'fontSize' => $info['siteintrsize'],
                 'fontColor' => '85,85,85',
                 'angle' => 0,
             ),
@@ -174,7 +209,7 @@ function generatePoster($postData)
         'image' => array(
             array(
                 'url' => 0,
-                'stream' => get_curl('https://tu.ltyuanfang.cn/api/fengjing.php'),
+                'stream' => get_curl($info["headimage"]),
                 'left' => 0,
                 'top' => 0,
                 'right' => 0,
@@ -213,12 +248,12 @@ function generatePoster($postData)
 
     // 海报生成逻辑
     poster::setConfig($config);
-    $res = poster::make();
+    $res = convertPngToJpgAndCompress(poster::make());
     poster::clear();
 
     if (!$res) {
         return array('code' => 400, 'msg' => poster::$errMsg);
     } else {
-        return array('code' => 200, 'msg' => '生成成功', 'img' => base64_encode($res));
+        return array('code' => 200, 'msg' => '生成成功', 'img' => $res);
     }
 }

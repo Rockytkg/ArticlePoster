@@ -9,7 +9,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) {
  * @package ArticlePoster
  * @author MoLeft
  * @author 浅梦
- * @version 1.0.9
+ * @version 1.1.0
  * @link https://letanml.xyz/
  */
 class ArticlePoster_Plugin implements Typecho_Plugin_Interface
@@ -19,6 +19,11 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
      */
     public static function activate()
     {
+        // 检查GD库是否启用
+        if (!extension_loaded('gd')) {
+            throw new Exception('插件激活失败，因为GD库没有启用');
+        }
+
         Helper::addRoute('ArticlePosterAction_make', '/ArticlePoster/make', 'ArticlePoster_Action', 'make');
         Typecho_Plugin::factory('Widget_Archive')->header = array('ArticlePoster_Plugin', 'header');
         Typecho_Plugin::factory('Widget_Archive')->footer = array('ArticlePoster_Plugin', 'footer');
@@ -49,6 +54,15 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
         );
         $form->addInput($sitename);
 
+        $siteNameSize = new Typecho_Widget_Helper_Form_Element_Text(
+            'siteNameSize',
+            null,
+            30,
+            _t('网站名称字体大小'),
+            _t('请填写网站名称字体大小,过大会导致排版错误')
+        );
+        $form->addInput($siteNameSize);
+
         $introduction = new Typecho_Widget_Helper_Form_Element_Text(
             'introduction',
             null,
@@ -58,6 +72,15 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
         );
         $form->addInput($introduction);
 
+        $introductionSize = new Typecho_Widget_Helper_Form_Element_Text(
+            'introductionSize',
+            null,
+            15,
+            _t('网站介绍字体大小'),
+            _t('请填写网站介绍字体大小,过大会导致排版错误')
+        );
+        $form->addInput($introductionSize);
+
         $author = new Typecho_Widget_Helper_Form_Element_Text(
             'author',
             null,
@@ -66,6 +89,15 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
             _t('请填写博主名称')
         );
         $form->addInput($author);
+
+        $authorSize = new Typecho_Widget_Helper_Form_Element_Text(
+            'authorSize',
+            null,
+            17,
+            _t('博主名称字体大小'),
+            _t('请填写博主名称字体大小,过大会导致排版错误')
+        );
+        $form->addInput($authorSize);
 
         $qq = new Typecho_Widget_Helper_Form_Element_Text(
             'qq',
@@ -85,14 +117,59 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
         );
         $form->addInput($content);
 
+        $contentSize = new Typecho_Widget_Helper_Form_Element_Text(
+            'contentSize',
+            null,
+            15,
+            _t('自定义摘要字段字体大小'),
+            _t('请填写自定义摘要字段字体大小,过大会导致排版错误')
+        );
+        $form->addInput($contentSize);
+
+        $titleSize = new Typecho_Widget_Helper_Form_Element_Text(
+            'titleSize',
+            null,
+            30,
+            _t('文章标题字体大小'),
+            _t('请填写文章标题字体大小,过大会导致排版错误')
+        );
+        $form->addInput($titleSize);
+
+        $headimage = new Typecho_Widget_Helper_Form_Element_Text(
+            'headimage',
+            null,
+            'https://tu.ltyuanfang.cn/api/fengjing.php',
+            _t('海报头部图片'),
+            _t('请填写海报头部图片的URL，推荐填写随机图片API')
+        );
+        $form->addInput($headimage);
+
         $button = new Typecho_Widget_Helper_Form_Element_Textarea(
             'button',
             null,
-            '<div class="agree"style="margin-left:40px"><button class="article-poster-button xc-poster-button"><i class="iconfont iconhaibaofenxiang"></i></button><span class="post_ds">海报</span></div>',
+            '<button class="article-poster-button">海报</button>',
             _t('自定义按钮样式'),
             _t('根据自己模板的按钮样式来自定义分享按钮的样式，在class里面加入<b style="color: #ff0000;">article-poster-button</b>即可使用')
         );
         $form->addInput($button);
+
+        $customCss = new Typecho_Widget_Helper_Form_Element_Textarea(
+            'customCss',
+            null,
+            '',
+            _t('自定义CSS'),
+            _t('填写自定义CSS样式，可以用于修改插件的外观')
+        );
+        $form->addInput($customCss);
+
+        $customJs = new Typecho_Widget_Helper_Form_Element_Textarea(
+            'customJs',
+            null,
+            '',
+            _t('自定义CSS'),
+            _t('填写自定义CSS样式，可以用于修改插件的外观')
+        );
+        $form->addInput($customJs);
     }
 
     /**
@@ -123,12 +200,14 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
     public static function header()
     {
         $options = Helper::options();
+        echo '<style>' . $options->plugin('ArticlePoster')->customCss . '</style>';
         echo '<link rel="stylesheet" href="' . $options->pluginUrl . '/ArticlePoster/css/core.css">';
     }
 
     public static function footer()
     {
         $options = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster');
+        echo '<script>' . $options->plugin('ArticlePoster')->customJs . '</script>';
         echo '<script src="' . Helper::options()->pluginUrl . '/ArticlePoster/js/core.js"></script>';
     }
 }

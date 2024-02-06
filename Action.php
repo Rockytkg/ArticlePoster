@@ -9,10 +9,10 @@ class ArticlePoster_Action extends Typecho_Widget implements Widget_Interface_Do
     private $db;
     private $info;
 
-    public function __construct($request, $response, $params = NULL)
+    public function __construct()
     {
         $pluginOptions = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster');
-        $infoKeys = ['sitename', 'introduction', 'author', 'qq'];
+        $infoKeys = ['sitename', 'siteNameSize', 'introduction', 'introductionSize', 'author', 'authorSize', 'qq', 'contentSize', 'titleSize', 'headimage'];
         foreach ($infoKeys as $key) {
             $this->info[$key] = $pluginOptions->{$key};
         }
@@ -25,38 +25,41 @@ class ArticlePoster_Action extends Typecho_Widget implements Widget_Interface_Do
      */
     public function make()
     {
+        $cid = filter_input(INPUT_GET, 'cid', FILTER_VALIDATE_INT, [
+            'options' => [
+                'default' => null, // 或其他默认值
+                'min_range' => 1
+            ]
+        ]);
 
-        if (empty($_GET['cid'])) {
-            $this->export('缺少参数', 400);
-        } elseif (!is_numeric($_GET['cid']) || $_GET['cid'] < 1) {
-            $this->export('参数错误', 400);
+        if ($cid === null) {
+            $this->export('参数错误或缺少参数', 400);
+            return; // 提早返回避免进一步处理
         }
 
-        $cid = $_GET['cid'];
+        // 防止路径遍历：确保$cid仅为数字
+        $cid = intval($cid); // 重复验证确保$cid为整数
 
-        // 检查是否存在海报
-        $imgPath = __DIR__ . '/poster/cid-' . $cid . '.png';
+        // 构建安全路径，确保文件名仅包含安全字符
+        $imgPath = __DIR__ . '/poster/cid-' . basename($cid) . '.jpg';
         if (file_exists($imgPath)) {
             $imgData = file_get_contents($imgPath);
-            $base64 = 'data:image/png;base64,' . base64_encode($imgData);
+            $base64 = "data:image/jpeg;base64," . base64_encode($imgData);
             $this->export('生成成功', 200, $base64);
-        }
-
-        $post = $this->getPostInfo($cid);
-        $post['sitename'] = $this->info['sitename'];
-        $post['introduction'] = $this->info['introduction'];
-        $post['author'] = $this->info['author'];
-        $post['qq'] = $this->info['qq'];
-
-        $img = generatePoster($post);
-
-        if ($img['code'] !== 200) {
-            $this->export('生成失败', 500);
         } else {
-            $imgUrl = $this->saveImage($img['img'], $cid);
-            $this->export('生成成功', 200, $imgUrl);
+            $post = array_merge($this->getPostInfo($cid), $this->info);
+
+            $img = @generatePoster($post);
+
+            if ($img['code'] !== 200) {
+                $this->export('生成失败', 500);
+            } else {
+                $imgUrl = $this->saveImage($img['img'], $cid);
+                $this->export('生成成功', 200, $imgUrl);
+            }
         }
     }
+
 
     /**
      * 获取文章信息
@@ -109,15 +112,14 @@ class ArticlePoster_Action extends Typecho_Widget implements Widget_Interface_Do
      */
     function saveImage($imgData, $cid)
     {
-        $imgData = base64_decode($imgData);
-        $imgName = 'cid-' . $cid . '.png';
+        $imgName = 'cid-' . $cid . '.jpg';
         $imgPath = __DIR__ . '/poster/' . $imgName;
         // 检查文件夹是否存在
         if (!is_dir(__DIR__ . '/poster')) {
             mkdir(__DIR__ . '/poster');
         }
         file_put_contents($imgPath, $imgData);
-        return "data:image/png;base64," . base64_encode($imgData);
+        return "data:image/jpeg;base64," . base64_encode($imgData);
     }
 
     /**
