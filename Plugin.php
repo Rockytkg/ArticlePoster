@@ -206,8 +206,7 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
 
     public static function footer()
     {
-        $options = Typecho_Widget::widget('Widget_Options')->plugin('ArticlePoster');
-        echo '<script>' . $options->plugin('ArticlePoster')->customJs . '</script>';
+        echo '<script>' . Helper::options()->plugin('ArticlePoster')->customJs . '</script>';
         echo '<script src="' . Helper::options()->pluginUrl . '/ArticlePoster/js/core.js"></script>';
     }
 }
