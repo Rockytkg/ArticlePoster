@@ -20,12 +20,15 @@
   margin: 15px 0;
 }
 
-.article-poster a, .article-poster .poster-popover-box a {
+.article-poster a,
+.article-poster .poster-popover-box a {
   background-color: var(--primary-color);
   color: var(--text-color);
   text-decoration: none !important;
   padding: 5px 0;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .article-poster a {
@@ -44,7 +47,8 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-.poster-popover-mask, .poster-popover-box {
+.poster-popover-mask,
+.poster-popover-box {
   display: none;
   z-index: 999;
   position: fixed;
