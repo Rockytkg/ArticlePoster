@@ -50,7 +50,7 @@
 .poster-popover-mask,
 .poster-popover-box {
   display: none;
-  z-index: 999;
+  z-index: 99999;
   position: fixed;
   top: 0;
   bottom: 0;
