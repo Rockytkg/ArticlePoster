@@ -1,11 +1,6 @@
 // 扩展配置对象
 const CONFIG = {
   messages: {
-    // 按钮图标，支持html
-    downloadIcon: "下载海报",
-    errorIcon: "生成失败...",
-    waitIcon: "生成中...",
-
     // 提示信息
     idError: "文章ID获取失败，请联系管理员",
     success: "操作成功！",
@@ -33,13 +28,6 @@ const CONFIG = {
           console.log(`信息: ${message}`);
       }
     },
-    
-    updateButtonState: (button, text, disabled) => {
-      if (button) {
-        button.innerHTML = text || "";
-        button.disabled = !!disabled;
-      }
-    },
     setElementDisplay: (selectors, display) => {
       document
         .querySelectorAll(selectors)
@@ -52,11 +40,8 @@ const initArticlePoster = () => {
   const createPoster = async () => {
     const articlePoster = document.querySelector(".article-poster");
     const id = articlePoster?.getAttribute("data-id");
-    const button = document.querySelector(".article-poster-button");
 
     if (!id) return CONFIG.dialog.showAlert(CONFIG.messages.idError, "error");
-
-    CONFIG.dialog.updateButtonState(button, CONFIG.messages.waitIcon, true);
 
     try {
       const response = await fetch(`/index.php/ArticlePoster/make?cid=${id}`);
@@ -69,18 +54,12 @@ const initArticlePoster = () => {
         );
         document.querySelector(".article-poster-images").src = json.data;
         document.querySelector(".poster-download").dataset.url = json.data;
-        CONFIG.dialog.updateButtonState(
-          button,
-          CONFIG.messages.downloadIcon,
-          false
-        );
         CONFIG.dialog.showAlert(CONFIG.messages.success, "success");
       } else {
         throw new Error(json.data || CONFIG.messages.fail);
       }
     } catch (error) {
       CONFIG.dialog.showAlert(error.message, "error");
-      CONFIG.dialog.updateButtonState(button, CONFIG.messages.errorIcon, false);
     }
   };
 
