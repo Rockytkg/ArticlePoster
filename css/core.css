@@ -12,6 +12,10 @@
   --blur-strength: 8px;
 }
 
+.article-poster-button {
+  cursor: pointer;
+}
+
 .article-poster {
   display: none;
   font-size: 14px;
