@@ -74,14 +74,23 @@ const initArticlePoster = () => {
   };
 
   const handleDocumentClick = (event) => {
-    if (event.target.matches(".article-poster-button")) createPoster();
-    else if (event.target.matches('[data-event="poster-close"]'))
-      CONFIG.dialog.setElementDisplay(
-        ".article-poster, .poster-popover-mask, .poster-popover-box",
-        "none"
-      );
-    else if (event.target.matches('[data-event="poster-download"]'))
-      downloadPoster();
+    let target = event.target;
+    while (target != document) {
+      if (target.matches(".article-poster-button")) {
+        createPoster();
+        break;
+      } else if (target.matches('[data-event="poster-close"]')) {
+        CONFIG.dialog.setElementDisplay(
+          ".article-poster, .poster-popover-mask, .poster-popover-box",
+          "none"
+        );
+        break;
+      } else if (target.matches('[data-event="poster-download"]')) {
+        downloadPoster();
+        break;
+      }
+      target = target.parentNode;
+    }
   };
 
   document.removeEventListener("click", handleDocumentClick);
