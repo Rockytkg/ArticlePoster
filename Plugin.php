@@ -152,24 +152,6 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
             _t('根据自己模板的按钮样式来自定义分享按钮的样式，在class里面加入<b style="color: #ff0000;">article-poster-button</b>即可使用')
         );
         $form->addInput($button);
-
-        $customCss = new Typecho_Widget_Helper_Form_Element_Textarea(
-            'customCss',
-            null,
-            '',
-            _t('自定义CSS'),
-            _t('填写自定义CSS样式，可以用于修改插件的外观')
-        );
-        $form->addInput($customCss);
-
-        $customJs = new Typecho_Widget_Helper_Form_Element_Textarea(
-            'customJs',
-            null,
-            '',
-            _t('自定义CSS'),
-            _t('填写自定义CSS样式，可以用于修改插件的外观')
-        );
-        $form->addInput($customJs);
     }
 
     /**
@@ -200,13 +182,11 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
     public static function header()
     {
         $options = Helper::options();
-        echo '<style>' . $options->plugin('ArticlePoster')->customCss . '</style>';
         echo '<link rel="stylesheet" href="' . $options->pluginUrl . '/ArticlePoster/css/core.css">';
     }
 
     public static function footer()
     {
-        echo '<script>' . Helper::options()->plugin('ArticlePoster')->customJs . '</script>';
         echo '<script src="' . Helper::options()->pluginUrl . '/ArticlePoster/js/core.js"></script>';
     }
 }
