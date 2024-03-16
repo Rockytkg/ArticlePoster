@@ -176,7 +176,7 @@ class ArticlePoster_Plugin implements Typecho_Plugin_Interface
         $config = $options->plugin('ArticlePoster');
         echo '<!-- ArticlePoster -->';
         echo $config->button;
-        echo '<div data-id="' . $cid . '" class="article-poster action action-poster"><div class="poster-popover-mask" data-event="poster-close"></div><div class="poster-popover-box"><a class="poster-download" data-event="poster-download" data-url="">下载海报</a><img class="article-poster-images"/></div></div>';
+        echo '<div data-id="' . $cid . '" class="poster-popover-mask"> <div class="poster-popover-box"> <img class="article-poster-images"> <a class="poster-download">下载海报</a> </div> </div>';
     }
 
     public static function header()

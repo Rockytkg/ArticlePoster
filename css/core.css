@@ -1,100 +1,76 @@
-:root {
-  --primary-color: #0078ff;
-  --text-color: #fff;
-  --background-color: #f0f0f0;
-  --border-color: #d1d1d1;
-  --border-radius: 30px;
-  --hover-bg-color: #fff;
-  --hover-text-color: #0078ff;
-  --poster-bg-color: #fafafa;
-  --modal-bg-color: rgba(0, 0, 0, 0.6);
-  --modal-content-bg: #fff;
-  --blur-strength: 8px;
-}
-
-.article-poster-button {
-  cursor: pointer;
-}
-
-.article-poster {
-  display: none;
-  font-size: 14px;
-  text-align: center;
-  line-height: 22px;
-  margin: 15px 0;
-}
-
-.article-poster a,
-.article-poster .poster-popover-box a {
-  background-color: var(--primary-color);
-  color: var(--text-color);
-  text-decoration: none !important;
-  padding: 5px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.article-poster a {
-  box-shadow: none;
-  width: 100%;
-  border: 2px solid var(--primary-color);
-  border-radius: var(--border-radius);
-  padding: 10px 40px;
-  line-height: 25px;
-}
-
-.article-poster > a:hover {
-  background-color: var(--hover-bg-color);
-  color: var(--hover-text-color);
-  transform: scale(1.05);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.poster-popover-mask,
-.poster-popover-box {
-  display: none;
-  z-index: 99999;
+.poster-popover-mask {
   position: fixed;
   top: 0;
-  bottom: 0;
   left: 0;
-  right: 0;
-  background: var(--modal-bg-color);
-  backdrop-filter: blur(var(--blur-strength));
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  animation: post-modal-box-In 0.5s forwards;
 }
 
 .poster-popover-box {
+  background-color: #fff;
   width: 330px;
-  height: 90%;
-  margin: auto;
-  border-radius: 5px;
-  padding: 15px;
-  background: var(--poster-bg-color);
-  overflow: hidden;
+  max-height: 90vh;
+  padding: 20px 0;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transform: scale(0.7);
+  opacity: 0;
+  animation: post-modal-box-scaleUp 0.5s forwards;
 }
 
-.poster-popover-box img {
-  border: 1px solid var(--border-color);
-  width: auto;
-  height: 90%;
-}
-
-.poster-popover-box a {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+.article-poster-images {
   width: 100%;
-  height: 35px;
-  line-height: 35px;
-  cursor: pointer;
-  border-radius: 0 0 5px 5px;
+  max-height: 80vh;
+  object-fit: contain;
 }
 
-@media screen and (max-width: 767px) {
-  .poster-popover-box {
-    width: 250px;
-    height: 455px;
+.poster-download {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 4px;
+}
+
+.poster-download:hover {
+  background-color: #0056b3;
+  cursor: pointer;
+}
+
+/* 海报样式结束 */
+
+@keyframes post-modal-box-In {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes post-modal-box-scaleUp {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }

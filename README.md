@@ -16,14 +16,6 @@
 4.如果你的模板没有引入jquery或者上述过程都设置好了点击按钮无响应，可以开启加载jquery
 5.修改图标部分可以找到`/usr/plugins/ArticlePoster/js/core.js`，修改注释部分图标样式
 
-# pjax适配
-
-自1.1.0之后重新调整对于pjax的适配方案，如果主题有pjax回调，请在回调函数中填写以下代码
-
-```js
-initArticlePoster();
-```
-
 # 更新日志
 
 2024-2-6更新说明
